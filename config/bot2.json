@@ -1,0 +1,28 @@
+{
+    "name": "bot2",
+    "version": "1.0.0",
+    "description": "Fuel",
+    "main": "bot2.js",
+    "scripts": {
+      "start": "node bot2.js"
+    },
+    "dependencies": {
+      "discord.js": "^14.0.0",
+      "rss-parser": "^3.9.0",
+      "node-cron": "^3.0.0"
+    },
+    "engines": {
+      "node": ">=14.0.0"
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/CricuitCrew/discord-multi-bot.git"
+    },
+    "keywords": [
+      "discord",
+      "bot",
+      "fuel"
+    ],
+    "author": "MPV",
+    "license": "MIT"
+  }

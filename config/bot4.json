@@ -1,0 +1,27 @@
+{
+    "name": "bot4",
+    "version": "1.0.0",
+    "description": "Master",
+    "main": "bot4.js",
+    "scripts": {
+      "start": "node bot4.js"
+    },
+    "dependencies": {
+      "discord.js": "^14.0.0",
+      "rss-parser": "^3.9.0",
+      "node-cron": "^3.0.0"
+    },
+    "engines": {
+      "node": ">=14.0.0"
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/CricuitCrew/discord-multi-bot.git"
+    },
+    "keywords": [
+      "discord",
+      "bot"
+    ],
+    "author": "MPV",
+    "license": "MIT"
+  }
