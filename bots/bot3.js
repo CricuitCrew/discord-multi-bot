@@ -24,17 +24,22 @@ const circuits = [
 
 const categories = {
     GT2: ['KTM X-Bow GT2', 'Maserati GT2', 'Audi R8 LMS GT2', 'Mercedes-AMG GT2', 'Porsche 911 GT2 RS CS Evo', 'Porsche 935'],
-    GT3: [
-        'Ferrari 296 GT3 (2023)', 'Lamborghini Huracan GT3 EVO2 (2023)', 'Porsche 911 (992) GT3 R (2023)', 'Audi R8 LMS Evo II (2022)', 
-        'Ferrari 488 Challenge Evo (2020)', 'Lamborghini Huracan ST EVO2 (2021)', 'Porsche 922 GT3 Cup (2021)', 'BMW M2 CS Racing (2020)', 
-        'Ferrari 488 GT3 Evo (2020)', 'Mercedes-AMG GT3 (2023)', 'Aston Martin V8 Vantage (2019)', 'Aston Martin V12 Vantage (2013)', 
-        'Audi R8 LMS (2015)', 'Audi R8 LMS Evo (2019)', 'Bentley Continental GT3 (2015)', 'Bentley Continental GT3 (2018)', 
-        'BMW M4 GT3 (2022)', 'BMW M6 GT3 (2017)', 'Ferrari 488 GT3 (2018)', 'Ford Mustang GT3 Race Car (2024)', 
-        'Honda NSX GT3 (2017)', 'Honda NSX GT3 Evo (2019)', 'Jaguar Emil Frey G3 (2012)', 'Lamborghini Huracan GT3 (2015)', 
-        'Lamborghini Huracan GT3 Evo (2019)', 'McLaren 720S GT3 EVO (2023)', 'McLaren 720S GT3 (2019)', 'McLaren 650S GT3 (2015)', 
-        'Mercedes-AMG GT3 (2015)', 'Nissan GT-R Nismo GT3 (2015)', 'Nissan GT-R Nismo (2018)', 'Porsche 991 GT3 R (2018)', 
-        'Porsche 991II GT3 R (2019)', 'Reiter Engineering R-EX GT3 (2017)'
-    ],
+    GT3: {
+        'Ferrari': ['Ferrari 296 GT3 (2023)', 'Ferrari 488 Challenge Evo (2020)', 'Ferrari 488 GT3 Evo (2020)', 'Ferrari 488 GT3 (2018)'],
+        'Lamborghini': ['Lamborghini Huracan GT3 EVO2 (2023)', 'Lamborghini Huracan ST EVO2 (2021)', 'Lamborghini Huracan GT3 (2015)', 'Lamborghini Huracan GT3 Evo (2019)'],
+        'Porsche': ['Porsche 911 (992) GT3 R (2023)', 'Porsche 922 GT3 Cup (2021)', 'Porsche 991 GT3 R (2018)', 'Porsche 991II GT3 R (2019)'],
+        'Audi': ['Audi R8 LMS Evo II (2022)', 'Audi R8 LMS (2015)', 'Audi R8 LMS Evo (2019)'],
+        'BMW': ['BMW M2 CS Racing (2020)', 'BMW M4 GT3 (2022)', 'BMW M6 GT3 (2017)'],
+        'Mercedes-AMG': ['Mercedes-AMG GT3 (2023)', 'Mercedes-AMG GT3 (2015)'],
+        'Aston Martin': ['Aston Martin V8 Vantage (2019)', 'Aston Martin V12 Vantage (2013)'],
+        'Bentley': ['Bentley Continental GT3 (2015)', 'Bentley Continental GT3 (2018)'],
+        'Ford': ['Ford Mustang GT3 Race Car (2024)'],
+        'Honda': ['Honda NSX GT3 (2017)', 'Honda NSX GT3 Evo (2019)'],
+        'Jaguar': ['Jaguar Emil Frey G3 (2012)'],
+        'McLaren': ['McLaren 720S GT3 EVO (2023)', 'McLaren 720S GT3 (2019)', 'McLaren 650S GT3 (2015)'],
+        'Nissan': ['Nissan GT-R Nismo GT3 (2015)', 'Nissan GT-R Nismo (2018)'],
+        'Reiter Engineering': ['Reiter Engineering R-EX GT3 (2017)']
+    },
     GT4: [
         'ALpine A110 GT4 (2018)', 'Aston Martin AMR V8 Vantage GT4 (2018)', 'Audi R8 LMS GT4 (2018)', 'BMW M4 GT4 (2018)', 
         'Chevrolet Camaro GT4.R (2017)', 'Ginetta g55 GT4 (2012)', 'KTM X-Bow GT4 (2016)', 'Maserati Gran Turismo MC GT4 (2016)', 
@@ -224,34 +229,13 @@ client.on('interactionCreate', async interaction => {
         const brands = {
             GT2: ['KTM', 'Maserati', 'Audi', 'Mercedes-AMG', 'Porsche'],
             GT3: [
-                Ferrari: ['Ferrari 296 GT3 (2023)', 'Ferrari 488 Challenge Evo (2020)', 'Ferrari 488 GT3 Evo (2020)', 'Ferrari 488 GT3 (2018)'],
-                Lamborghini: ['Lamborghini Huracan GT3 EVO2 (2023)', 'Lamborghini Huracan ST EVO2 (2021)', 'Lamborghini Huracan GT3 (2015)', 'Lamborghini Huracan GT3 Evo (2019)'],
-                Porsche: ['Porsche 911 (992) GT3 R (2023)', 'Porsche 922 GT3 Cup (2021)', 'Porsche 991 GT3 R (2018)', 'Porsche 991II GT3 R (2019)'],
-                Audi: ['Audi R8 LMS Evo II (2022)', 'Audi R8 LMS (2015)', 'Audi R8 LMS Evo (2019)'],
-                BMW: ['BMW M2 CS Racing (2020)', 'BMW M4 GT3 (2022)', 'BMW M6 GT3 (2017)'],
-                'Mercedes-AMG': ['Mercedes-AMG GT3 (2023)', 'Mercedes-AMG GT3 (2015)'],
-                'Aston Martin': ['Aston Martin V8 Vantage (2019)', 'Aston Martin V12 Vantage (2013)'],
-                Bentley: ['Bentley Continental GT3 (2015)', 'Bentley Continental GT3 (2018)'],
-                Ford: ['Ford Mustang GT3 Race Car (2024)'],
-                Honda: ['Honda NSX GT3 (2017)', 'Honda NSX GT3 Evo (2019)'],
-                Jaguar: ['Jaguar Emil Frey G3 (2012)'],
-                McLaren: ['McLaren 720S GT3 EVO (2023)', 'McLaren 720S GT3 (2019)', 'McLaren 650S GT3 (2015)'],
-                Nissan: ['Nissan GT-R Nismo GT3 (2015)', 'Nissan GT-R Nismo (2018)'],
-                'Reiter Engineering': ['Reiter Engineering R-EX GT3 (2017)']
+                'Ferrari', 'Lamborghini', 'Porsche', 'Audi', 'BMW', 'Mercedes-AMG', 'Aston Martin', 
+                'Bentley', 'Ford', 'Honda', 'Jaguar', 'McLaren', 'Nissan', 'Reiter Engineering'
             ],
-            GT4: {
-                ALpine: ['ALpine A110 GT4 (2018)'],
-                'Aston Martin': ['Aston Martin AMR V8 Vantage GT4 (2018)'],
-                Audi: ['Audi R8 LMS GT4 (2018)'],
-                BMW: ['BMW M4 GT4 (2018)'],
-                Chevrolet: ['Chevrolet Camaro GT4.R (2017)'],
-                Ginetta: ['Ginetta g55 GT4 (2012)'],
-                KTM: ['KTM X-Bow GT4 (2016)'],
-                Maserati: ['Maserati Gran Turismo MC GT4 (2016)'],
-                McLaren: ['McLaren 570S GT4 (2016)'],
-                'Mercedes-AMG': ['Mercedes-AMG GT4 (2016)'],
-                Porsche: ['Porsche718 Cayman GT4 Clubsport (2019)']
-            }
+            GT4: [
+                'ALpine', 'Aston Martin', 'Audi', 'BMW', 'Chevrolet', 'Ginetta', 'KTM', 'Maserati', 
+                'McLaren', 'Mercedes-AMG', 'Porsche'
+            ]
         };
 
         const selectedBrands = brands[process.category];
@@ -288,40 +272,40 @@ client.on('interactionCreate', async interaction => {
 
         const cars = {
             GT2: {
-                KTM: ['KTM X-Bow GT2'],
-                Maserati: ['Maserati GT2'],
-                Audi: ['Audi R8 LMS GT2'],
+                'KTM': ['KTM X-Bow GT2'],
+                'Maserati': ['Maserati GT2'],
+                'Audi': ['Audi R8 LMS GT2'],
                 'Mercedes-AMG': ['Mercedes-AMG GT2'],
-                Porsche: ['Porsche 911 GT2 RS CS Evo', 'Porsche 935']
+                'Porsche': ['Porsche 911 GT2 RS CS Evo', 'Porsche 935']
             },
             GT3: {
-                Ferrari: ['Ferrari 296 GT3 (2023)', 'Ferrari 488 Challenge Evo (2020)', 'Ferrari 488 GT3 Evo (2020)', 'Ferrari 488 GT3 (2018)'],
-                Lamborghini: ['Lamborghini Huracan GT3 EVO2 (2023)', 'Lamborghini Huracan ST EVO2 (2021)', 'Lamborghini Huracan GT3 (2015)', 'Lamborghini Huracan GT3 Evo (2019)'],
-                Porsche: ['Porsche 911 (992) GT3 R (2023)', 'Porsche 922 GT3 Cup (2021)', 'Porsche 991 GT3 R (2018)', 'Porsche 991II GT3 R (2019)'],
-                Audi: ['Audi R8 LMS Evo II (2022)', 'Audi R8 LMS (2015)', 'Audi R8 LMS Evo (2019)'],
-                BMW: ['BMW M2 CS Racing (2020)', 'BMW M4 GT3 (2022)', 'BMW M6 GT3 (2017)'],
+                'Ferrari': ['Ferrari 296 GT3 (2023)', 'Ferrari 488 Challenge Evo (2020)', 'Ferrari 488 GT3 Evo (2020)', 'Ferrari 488 GT3 (2018)'],
+                'Lamborghini': ['Lamborghini Huracan GT3 EVO2 (2023)', 'Lamborghini Huracan ST EVO2 (2021)', 'Lamborghini Huracan GT3 (2015)', 'Lamborghini Huracan GT3 Evo (2019)'],
+                'Porsche': ['Porsche 911 (992) GT3 R (2023)', 'Porsche 922 GT3 Cup (2021)', 'Porsche 991 GT3 R (2018)', 'Porsche 991II GT3 R (2019)'],
+                'Audi': ['Audi R8 LMS Evo II (2022)', 'Audi R8 LMS (2015)', 'Audi R8 LMS Evo (2019)'],
+                'BMW': ['BMW M2 CS Racing (2020)', 'BMW M4 GT3 (2022)', 'BMW M6 GT3 (2017)'],
                 'Mercedes-AMG': ['Mercedes-AMG GT3 (2023)', 'Mercedes-AMG GT3 (2015)'],
                 'Aston Martin': ['Aston Martin V8 Vantage (2019)', 'Aston Martin V12 Vantage (2013)'],
-                Bentley: ['Bentley Continental GT3 (2015)', 'Bentley Continental GT3 (2018)'],
-                Ford: ['Ford Mustang GT3 Race Car (2024)'],
-                Honda: ['Honda NSX GT3 (2017)', 'Honda NSX GT3 Evo (2019)'],
-                Jaguar: ['Jaguar Emil Frey G3 (2012)'],
-                McLaren: ['McLaren 720S GT3 EVO (2023)', 'McLaren 720S GT3 (2019)', 'McLaren 650S GT3 (2015)'],
-                Nissan: ['Nissan GT-R Nismo GT3 (2015)', 'Nissan GT-R Nismo (2018)'],
+                'Bentley': ['Bentley Continental GT3 (2015)', 'Bentley Continental GT3 (2018)'],
+                'Ford': ['Ford Mustang GT3 Race Car (2024)'],
+                'Honda': ['Honda NSX GT3 (2017)', 'Honda NSX GT3 Evo (2019)'],
+                'Jaguar': ['Jaguar Emil Frey G3 (2012)'],
+                'McLaren': ['McLaren 720S GT3 EVO (2023)', 'McLaren 720S GT3 (2019)', 'McLaren 650S GT3 (2015)'],
+                'Nissan': ['Nissan GT-R Nismo GT3 (2015)', 'Nissan GT-R Nismo (2018)'],
                 'Reiter Engineering': ['Reiter Engineering R-EX GT3 (2017)']
             },
             GT4: {
-                ALpine: ['ALpine A110 GT4 (2018)'],
+                'ALpine': ['ALpine A110 GT4 (2018)'],
                 'Aston Martin': ['Aston Martin AMR V8 Vantage GT4 (2018)'],
-                Audi: ['Audi R8 LMS GT4 (2018)'],
-                BMW: ['BMW M4 GT4 (2018)'],
-                Chevrolet: ['Chevrolet Camaro GT4.R (2017)'],
-                Ginetta: ['Ginetta g55 GT4 (2012)'],
-                KTM: ['KTM X-Bow GT4 (2016)'],
-                Maserati: ['Maserati Gran Turismo MC GT4 (2016)'],
-                McLaren: ['McLaren 570S GT4 (2016)'],
+                'Audi': ['Audi R8 LMS GT4 (2018)'],
+                'BMW': ['BMW M4 GT4 (2018)'],
+                'Chevrolet': ['Chevrolet Camaro GT4.R (2017)'],
+                'Ginetta': ['Ginetta g55 GT4 (2012)'],
+                'KTM': ['KTM X-Bow GT4 (2016)'],
+                'Maserati': ['Maserati Gran Turismo MC GT4 (2016)'],
+                'McLaren': ['McLaren 570S GT4 (2016)'],
                 'Mercedes-AMG': ['Mercedes-AMG GT4 (2016)'],
-                Porsche: ['Porsche718 Cayman GT4 Clubsport (2019)']
+                'Porsche': ['Porsche718 Cayman GT4 Clubsport (2019)']
             }
         };
 
