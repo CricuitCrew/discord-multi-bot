@@ -52,13 +52,17 @@ const setupImages = {};
 
 circuits.forEach(circuit => {
     Object.keys(categories).forEach(category => {
-        categories[category].forEach(car => {
-            const key = `${circuit}_${category}_${car}`;
-            setupImages[key] = [];
-            for (let i = 1; i <= 3; i++) {
-                setupImages[key].push(path.join(__dirname, 'images', `${circuit}_${category}_${car.replace(/ /g, '_').replace(/\(|\)/g, '')}_${i}.png`));
-            }
-        });
+        if (Array.isArray(categories[category])) { // Aggiungi un controllo per assicurarti che sia un array
+            categories[category].forEach(car => {
+                const key = `${circuit}_${category}_${car}`;
+                setupImages[key] = [];
+                for (let i = 1; i <= 3; i++) {
+                    setupImages[key].push(path.join(__dirname, 'images', `${circuit}_${category}_${car.replace(/ /g, '_').replace(/\(|\)/g, '')}_${i}.png`));
+                }
+            });
+        } else {
+            console.error(`categories[${category}] is not an array`);
+        }
     });
 });
 
