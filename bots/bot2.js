@@ -4,7 +4,6 @@ require('dotenv').config();
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 const token = process.env.BOT2_TOKEN;
 const channelId = '1258928495929593857';
-require('dotenv').config();
 
 client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
