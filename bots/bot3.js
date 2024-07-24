@@ -53,96 +53,40 @@ const models = [
    { brand: 'Maserati', models: ['Maserati Gran Turismo MC GT4 (2016)'] }
 ];
 
-const setupImages = {};
-
-circuits.forEach(circuit => {
-    models.forEach(brand => {
-        brand.models.forEach(model => {
-            const key = `${circuit}_${brand}_${model}`;
-            setupImages[key] = [];
-            for (let i = 1; i <= 3; i++) {
-                setupImages[key].push(path.join(__dirname, 'images', `${circuit}_${brand}_${model.replace(/ /g, '_').replace(/\(|\)/g, '')}_${i}.png`));
-            }
-        });
-    });
+client.on('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
 });
 
-async function cleanupProcess(userId) {
-    const process = setupProcesses[userId];
-    if (!process) return;
-
-    const { messages, timeout } = process;
-    clearTimeout(timeout);
-
-    for (const message of messages) {
-        try {
-            await message.delete();
-        } catch (error) {
-            console.error('Error deleting message:', error);
-        }
-    }
-    delete setupProcesses[userId];
-}
-
-async function startSetupProcess(message) {
-    const userId = message.author.id;
-
-    setupProcesses[userId] = {
-        messages: [message],
-        state: 'circuit',
-        choices: {},
-        timeout: setTimeout(() => {
-            if (setupProcesses[userId]) {
-                cleanupProcess(userId);
-            }
-        }, TIMEOUT)
-    };
-
-    const rows = [];
-    for (let i = 0; i < circuits.length; i += 25) {
-        const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId(`circuitSelect${i / 25 + 1}`)
-            .setPlaceholder('Seleziona il circuito')
-            .addOptions(circuits.slice(i, i + 25).map(circuit => ({
-                label: circuit,
-                value: circuit
-            })));
-        rows.push(new ActionRowBuilder().addComponents(selectMenu));
-    }
-
-    const circuitMessage = await message.channel.send({
-        content: 'Seleziona il circuito:',
-        components: rows
-    });
-    setupProcesses[userId].messages.push(circuitMessage);
-}
-
 client.on('messageCreate', async (message) => {
-    if (message.channel.id !== SETUP_CHANNEL_ID || message.author.bot) return;
+    if (message.channel.id !== SETUP_CHANNEL_ID) return;
 
     const userId = message.author.id;
 
     if (message.content === '!setup') {
-        const messages = await message.channel.messages.fetch({ limit: 100 });
-        const explanationExists = messages.some(msg => msg.content.includes('Ecco i comandi disponibili:'));
+        setupProcesses[userId] = { state: 'circuit', choices: {}, messages: [] };
 
-        if (!explanationExists) {
-            await message.channel.send('Il canale è stato ripulito. Ecco i comandi disponibili:\n\n' +
-                '**!setup**: Per avviare il Bot dei Setup.\n' +
-                '**!reset**: Annulla il processo corrente e ripulisce tutto.\n' +
-                '**!annulla**: Annulla la tua ultima scelta.');
-        }
+        const circuitMenu = new StringSelectMenuBuilder()
+            .setCustomId('circuitSelect')
+            .setPlaceholder('Seleziona il circuito')
+            .addOptions(circuits.map(circuit => ({
+                label: circuit,
+                value: circuit
+            })));
 
-        if (setupProcesses[userId]) {
-            message.reply({ content: 'Hai già un processo di setup in corso.', ephemeral: true });
-        } else {
-            await startSetupProcess(message);
-        }
-    } else if (message.content === '!reset') {
-        if (setupProcesses[userId]) {
-            await cleanupProcess(userId);
-            message.reply({ content: 'Il tuo processo di setup è stato annullato. Puoi iniziare un nuovo processo con il comando !setup.', ephemeral: true });
-        }
+        const setupMessage = await message.reply({
+            content: 'Benvenuto nel setup del bot!\nSeleziona il circuito:',
+            components: [new ActionRowBuilder().addComponents(circuitMenu)]
+        });
+
+        setupProcesses[userId].messages.push(setupMessage);
+
+        setTimeout(() => {
+            if (setupProcesses[userId]) {
+                cleanupProcess(userId);
+                message.reply('Il processo di setup è scaduto. Si prega di riavviare.');
+            }
+        }, TIMEOUT);
+
     } else if (message.content === '!annulla') {
         if (setupProcesses[userId]) {
             const process = setupProcesses[userId];
@@ -193,7 +137,7 @@ client.on('interactionCreate', async (interaction) => {
         choices.category = selectedCategory;
         process.state = 'brand';
 
-        const selectedBrands = brands.find(b => b.category === selectedCategory).brands;
+        const selectedBrands = brands.find(b => b.category === selectedCategory)?.brands || [];
 
         const brandMenu = new StringSelectMenuBuilder()
             .setCustomId('brandSelect')
@@ -213,7 +157,7 @@ client.on('interactionCreate', async (interaction) => {
         choices.brand = selectedBrand;
         process.state = 'model';
 
-        const selectedModels = models.find(m => m.brand === selectedBrand).models;
+        const selectedModels = models.find(m => m.brand === selectedBrand)?.models || [];
 
         const modelMenu = new StringSelectMenuBuilder()
             .setCustomId('modelSelect')
@@ -265,3 +209,17 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
     console.log('Server avviato sulla porta 3000');
 });
+
+async function cleanupProcess(userId) {
+    const process = setupProcesses[userId];
+    if (process) {
+        for (const message of process.messages) {
+            try {
+                await message.delete();
+            } catch (error) {
+                console.error('Error deleting message during cleanup:', error);
+            }
+        }
+        delete setupProcesses[userId];
+    }
+}
