@@ -1,19 +1,21 @@
+require('dotenv').config({ path: '/root/discord-multi-bot/.env' });
 const { Client, GatewayIntentBits, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const cron = require('node-cron');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+    console.log('Current directory:', __dirname);
 const app = express();
-require('dotenv').config({ path: '/root/discord-multi-bot/.env' });
-
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.DirectMessages] });
 
-const TOKEN = process.env.BOT3_TOKEN;
+const TOKEN = process.env.BO3_TOKEN;
+    console.log('TOKEN3:', process.env.BO3_TOKEN);
 const SETUP_CHANNEL_ID = '1262171803858636990';
 const TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 let setupProcesses = {};
 
+// Definizione dei circuiti, categorie e auto
 const circuits = [
     'Barcellona', 'Bathurst', 'Brands Hatch', 'Circuit of the Americas', 'Donington Park', 
     'Hungaroring', 'Imola', 'Indianapolis', 'Kyalami', 'Laguna Seca', 'Misano', 'Monza', 
@@ -22,204 +24,366 @@ const circuits = [
     'Zandvoort', 'Zolder'
 ];
 
-const categories = ['GT2', 'GT3', 'GT4'];
+const categories = {
+    GT2: ['KTM X-Bow GT2', 'Maserati GT2', 'Audi R8 LMS GT2', 'Mercedes-AMG GT2', 'Porsche 911 GT2 RS CS Evo', 'Porsche 935'],
+    GT3: [
+        'Ferrari 296 GT3 (2023)', 'Lamborghini Huracan GT3 EVO2 (2023)', 'Porsche 911 (992) GT3 R (2023)', 'Audi R8 LMS Evo II (2022)', 
+        'Ferrari 488 Challenge Evo (2020)', 'Lamborghini Huracan ST EVO2 (2021)', 'Porsche 922 GT3 Cup (2021)', 'BMW M2 CS Racing (2020)', 
+        'Ferrari 488 GT3 Evo (2020)', 'Mercedes-AMG GT3 (2023)', 'Aston Martin V8 Vantage (2019)', 'Aston Martin V12 Vantage (2013)', 
+        'Audi R8 LMS (2015)', 'Audi R8 LMS Evo (2019)', 'Bentley Continental GT3 (2015)', 'Bentley Continental GT3 (2018)', 
+        'BMW M4 GT3 (2022)', 'BMW M6 GT3 (2017)', 'Ferrari 488 GT3 (2018)', 'Ford Mustang GT3 Race Car (2024)', 
+        'Honda NSX GT3 (2017)', 'Honda NSX GT3 Evo (2019)', 'Jaguar Emil Frey G3 (2012)', 'Lamborghini Huracan GT3 (2015)', 
+        'Lamborghini Huracan GT3 Evo (2019)', 'McLaren 720S GT3 EVO (2023)', 'McLaren 720S GT3 (2019)', 'McLaren 650S GT3 (2015)', 
+        'Mercedes-AMG GT3 (2015)', 'Nissan GT-R Nismo GT3 (2015)', 'Nissan GT-R Nismo (2018)', 'Porsche 991 GT3 R (2018)', 
+        'Porsche 991II GT3 R (2019)', 'Reiter Engineering R-EX GT3 (2017)'
+    ],
+    GT4: [
+        'ALpine A110 GT4 (2018)', 'Aston Martin AMR V8 Vantage GT4 (2018)', 'Audi R8 LMS GT4 (2018)', 'BMW M4 GT4 (2018)', 
+        'Chevrolet Camaro GT4.R (2017)', 'Ginetta g55 GT4 (2012)', 'KTM X-Bow GT4 (2016)', 'Maserati Gran Turismo MC GT4 (2016)', 
+        'McLaren 570S GT4 (2016)', 'Mercedes-AMG GT4 (2016)', 'Porsche718 Cayman GT4 Clubsport (2019)'
+    ]
+};
 
-const brands = [
-   { category: 'GT2', brands: ['KTM', 'Maserati', 'Audi', 'Mercedes-AMG', 'Porsche'] },
-   { category: 'GT3', brands: ['Ferrari', 'Lamborghini', 'Porsche', 'Audi', 'BMW', 'Mercedes-AMG', 'Aston Martin', 'Bentley', 'Ford', 'Honda', 'Jaguar', 'McLaren', 'Nissan', 'Reiter Engineering'] },
-   { category: 'GT4', brands: ['ALpine', 'Aston Martin', 'Audi', 'BMW', 'Chevrolet', 'Ginetta', 'KTM', 'Maserati', 'McLaren', 'Mercedes-AMG', 'Porsche'] }
-];
+// Generazione automatica della mappatura delle immagini
+const setupImages = {};
 
-const models = [
-   { brand: 'KTM', models: ['KTM X-Bow GT2'] },
-   { brand: 'Maserati', models: ['Maserati GT2'] },
-   { brand: 'Audi', models: ['Audi R8 LMS GT2', 'Audi R8 LMS Evo II (2022)', 'Audi R8 LMS (2015)', 'Audi R8 LMS Evo (2019)', 'Audi R8 LMS GT4 (2018)'] },
-   { brand: 'Mercedes-AMG', models: ['Mercedes-AMG GT2', 'Mercedes-AMG GT3 (2023)', 'Mercedes-AMG GT3 (2015)', 'Mercedes-AMG GT4 (2016)'] },
-   { brand: 'Porsche', models: ['Porsche 911 GT2 RS CS Evo', 'Porsche 935', 'Porsche 911 (992) GT3 R (2023)', 'Porsche 922 GT3 Cup (2021)', 'Porsche 991 GT3 R (2018)', 'Porsche 991II GT3 R (2019)', 'Porsche718 Cayman GT4 Clubsport (2019)'] },
-   { brand: 'Ferrari', models: ['Ferrari 296 GT3 (2023)', 'Ferrari 488 Challenge Evo (2020)', 'Ferrari 488 GT3 Evo (2020)', 'Ferrari 488 GT3 (2018)'] },
-   { brand: 'Lamborghini', models: ['Lamborghini Huracan GT3 EVO2 (2023)', 'Lamborghini Huracan ST EVO2 (2021)', 'Lamborghini Huracan GT3 (2015)', 'Lamborghini Huracan GT3 Evo (2019)'] },
-   { brand: 'BMW', models: ['BMW M2 CS Racing (2020)', 'BMW M4 GT3 (2022)', 'BMW M6 GT3 (2017)', 'BMW M4 GT4 (2018)'] },
-   { brand: 'Aston Martin', models: ['Aston Martin V8 Vantage (2019)', 'Aston Martin V12 Vantage (2013)', 'Aston Martin AMR V8 Vantage GT4 (2018)'] },
-   { brand: 'Bentley', models: ['Bentley Continental GT3 (2015)', 'Bentley Continental GT3 (2018)'] },
-   { brand: 'Ford', models: ['Ford Mustang GT3 Race Car (2024)'] },
-   { brand: 'Honda', models: ['Honda NSX GT3 (2017)', 'Honda NSX GT3 Evo (2019)'] },
-   { brand: 'Jaguar', models: ['Jaguar Emil Frey G3 (2012)'] },
-   { brand: 'McLaren', models: ['McLaren 720S GT3 EVO (2023)', 'McLaren 720S GT3 (2019)', 'McLaren 650S GT3 (2015)', 'McLaren 570S GT4 (2016)'] },
-   { brand: 'Nissan', models: ['Nissan GT-R Nismo GT3 (2015)', 'Nissan GT-R Nismo (2018)'] },
-   { brand: 'Reiter Engineering', models: ['Reiter Engineering R-EX GT3 (2017)'] },
-   { brand: 'ALpine', models: ['ALpine A110 GT4 (2018)'] },
-   { brand: 'Chevrolet', models: ['Chevrolet Camaro GT4.R (2017)'] },
-   { brand: 'Ginetta', models: ['Ginetta g55 GT4 (2012)'] },
-   { brand: 'Maserati', models: ['Maserati Gran Turismo MC GT4 (2016)'] }
-];
-
-client.on('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
+circuits.forEach(circuit => {
+    Object.keys(categories).forEach(category => {
+        categories[category].forEach(car => {
+            const key = `${circuit}_${category}_${car}`;
+            setupImages[key] = [];
+            for (let i = 1; i <= 3; i++) {
+                setupImages[key].push(path.join(__dirname, 'images', `${circuit}_${category}_${car.replace(/ /g, '_').replace(/\(|\)/g, '')}_${i}.png`));
+            }
+        });
+    });
 });
 
+// Funzione per pulire i messaggi di un processo
+async function cleanupProcess(userId) {
+    const process = setupProcesses[userId];
+    if (!process) return;
+
+    const { messages, timeout } = process;
+    clearTimeout(timeout);
+
+    for (const message of messages) {
+        try {
+            await message.delete();
+        } catch (error) {
+            console.error('Error deleting message:', error);
+        }
+    }
+    delete setupProcesses[userId];
+}
+
+// Funzione per avviare il processo di setup
+async function startSetupProcess(message) {
+    const userId = message.author.id;
+
+    // Inizia il processo
+    setupProcesses[userId] = {
+        messages: [message],
+        state: 'circuit',
+        choices: {},
+        timeout: setTimeout(() => {
+            if (setupProcesses[userId]) {
+                cleanupProcess(userId);
+            }
+        }, TIMEOUT)
+    };
+
+    // Chiedi il circuito
+    const rows = [];
+    for (let i = 0; i < circuits.length; i += 25) {
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(`circuitSelect${i / 25 + 1}`)
+            .setPlaceholder('Seleziona il circuito')
+            .addOptions(circuits.slice(i, i + 25).map(circuit => ({
+                label: circuit,
+                value: circuit
+            })));
+        rows.push(new ActionRowBuilder().addComponents(selectMenu));
+    }
+
+    const circuitMessage = await message.channel.send({
+        content: 'Seleziona il circuito:',
+        components: rows
+    });
+    setupProcesses[userId].messages.push(circuitMessage);
+}
+
+// Gestione del comando !setup e verifica del messaggio di spiegazione
 client.on('messageCreate', async (message) => {
-    if (message.channel.id !== SETUP_CHANNEL_ID) return;
+    if (message.channel.id !== SETUP_CHANNEL_ID || message.author.bot) return;
 
     const userId = message.author.id;
 
     if (message.content === '!setup') {
-        setupProcesses[userId] = { state: 'circuit', choices: {}, messages: [] };
+        // Verifica se esiste il messaggio di spiegazione dei comandi
+        const messages = await message.channel.messages.fetch({ limit: 100 });
+        const explanationExists = messages.some(msg => msg.content.includes('Ecco i comandi disponibili:'));
 
-        const circuitMenu = new StringSelectMenuBuilder()
-            .setCustomId('circuitSelect')
-            .setPlaceholder('Seleziona il circuito')
-            .addOptions(circuits.map(circuit => ({
-                label: circuit,
-                value: circuit
-            })));
+        if (!explanationExists) {
+            await message.channel.send('Il canale è stato ripulito. Ecco i comandi disponibili:\n\n' +
+                '**!setup**: Per avviare il Bot dei Setup.\n' +
+                '**!reset**: Annulla il processo corrente e ripulisce tutto.\n' +
+                '**!annulla**: Annulla la tua ultima scelta.');
+        }
 
-        const setupMessage = await message.reply({
-            content: 'Benvenuto nel setup del bot!\nSeleziona il circuito:',
-            components: [new ActionRowBuilder().addComponents(circuitMenu)]
-        });
-
-        setupProcesses[userId].messages.push(setupMessage);
-
-        setTimeout(() => {
-            if (setupProcesses[userId]) {
-                cleanupProcess(userId);
-                message.reply('Il processo di setup è scaduto. Si prega di riavviare.');
-            }
-        }, TIMEOUT);
-
+        // Avvia il processo di setup
+        if (setupProcesses[userId]) {
+            message.reply({ content: 'Hai già un processo di setup in corso.', ephemeral: true });
+        } else {
+            await startSetupProcess(message);
+        }
+    } else if (message.content === '!reset') {
+        // Annulla il processo corrente e permette di avviarne uno nuovo
+        if (setupProcesses[userId]) {
+            await cleanupProcess(userId);
+            message.reply({ content: 'Il tuo processo di setup è stato annullato. Puoi iniziare un nuovo processo con il comando !setup.', ephemeral: true });
+        }
     } else if (message.content === '!annulla') {
+        // Torna indietro di una scelta
         if (setupProcesses[userId]) {
             const process = setupProcesses[userId];
-            const lastMessage = process.messages.pop();
-            if (lastMessage) {
-                try {
-                    await lastMessage.delete();
-                } catch (error) {
-                    console.error('Error deleting message:', error);
-                }
+            const lastState = process.state;
+
+            if (lastState === 'category') {
+                process.state = 'circuit';
+                process.choices = { circuit: process.choices.circuit };
+            } else if (lastState === 'brand') {
+                process.state = 'category';
+                process.choices = { circuit: process.choices.circuit, category: process.choices.category };
+            } else if (lastState === 'car') {
+                process.state = 'brand';
+                process.choices = { circuit: process.choices.circuit, category: process.choices.category, brand: process.choices.brand };
             }
-            if (process.messages.length === 0) {
-                await cleanupProcess(userId);
-            }
+
+            // Resend the appropriate message
+            await cleanupProcess(userId);
+            await startSetupProcess(message);
+            message.reply({ content: 'Tornato indietro di una scelta. Puoi continuare con il setup.', ephemeral: true });
+        } else {
+            message.reply({ content: 'Non hai alcun processo di setup in corso.', ephemeral: true });
         }
     }
 });
 
-client.on('interactionCreate', async (interaction) => {
+// Gestione delle interazioni con i menu a tendina
+client.on('interactionCreate', async interaction => {
     if (!interaction.isStringSelectMenu()) return;
 
     const userId = interaction.user.id;
     const process = setupProcesses[userId];
-    if (!process) return;
 
-    const { state, choices } = process;
+    if (!process) {
+        interaction.reply({ content: 'Non sei tu che hai avviato questo processo.', ephemeral: true });
+        return;
+    }
 
-    if (state === 'circuit' && interaction.customId.startsWith('circuitSelect')) {
-        const selectedCircuit = interaction.values[0];
-        choices.circuit = selectedCircuit;
+    if ((interaction.customId.startsWith('circuitSelect')) && process.state === 'circuit') {
+        // Circuito selezionato
+        process.circuit = interaction.values[0];
+        process.choices.circuit = process.circuit;
         process.state = 'category';
+        clearTimeout(process.timeout);
+        process.timeout = setTimeout(() => {
+            if (setupProcesses[userId]) {
+                cleanupProcess(userId);
+            }
+        }, TIMEOUT);
 
-        const categoryMenu = new StringSelectMenuBuilder()
+        const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('categorySelect')
             .setPlaceholder('Seleziona la categoria')
-            .addOptions(categories.map(category => ({
-                label: category,
-                value: category
-            })));
+            .addOptions([
+                { label: 'GT2', value: 'GT2' },
+                { label: 'GT3', value: 'GT3' },
+                { label: 'GT4', value: 'GT4' }
+            ]);
 
-        const categoryMessage = await interaction.update({
-            content: `Hai selezionato il circuito: ${selectedCircuit}\nSeleziona la categoria:`,
-            components: [new ActionRowBuilder().addComponents(categoryMenu)]
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+
+        const categoryMessage = await interaction.reply({
+            content: `Circuito selezionato: ${process.choices.circuit}\nSeleziona la categoria:`,
+            components: [row],
+            fetchReply: true
         });
         process.messages.push(categoryMessage);
-    } else if (state === 'category' && interaction.customId === 'categorySelect') {
-        const selectedCategory = interaction.values[0];
-        choices.category = selectedCategory;
+    } else if (interaction.customId === 'categorySelect' && process.state === 'category') {
+        // Categoria selezionata
+        process.category = interaction.values[0];
+        process.choices.category = process.category;
         process.state = 'brand';
+        clearTimeout(process.timeout);
+        process.timeout = setTimeout(() => {
+            if (setupProcesses[userId]) {
+                cleanupProcess(userId);
+            }
+        }, TIMEOUT);
 
-        const selectedBrands = brands.find(b => b.category === selectedCategory)?.brands || [];
+        const brands = {
+            GT2: ['KTM', 'Maserati', 'Audi', 'Mercedes-AMG', 'Porsche'],
+            GT3: [
+                'Ferrari', 'Lamborghini', 'Porsche', 'Audi', 'BMW', 'Mercedes-AMG', 'Aston Martin', 
+                'Bentley', 'Ford', 'Honda', 'Jaguar', 'McLaren', 'Nissan', 'Reiter Engineering'
+            ],
+            GT4: [
+                'ALpine', 'Aston Martin', 'Audi', 'BMW', 'Chevrolet', 'Ginetta', 'KTM', 'Maserati', 
+                'McLaren', 'Mercedes-AMG', 'Porsche'
+            ]
+        };
 
-        const brandMenu = new StringSelectMenuBuilder()
-            .setCustomId('brandSelect')
-            .setPlaceholder('Seleziona la marca')
-            .addOptions(selectedBrands.map(brand => ({
-                label: brand,
-                value: brand
-            })));
+        const selectedBrands = brands[process.category];
 
-        const brandMessage = await interaction.update({
-            content: `Hai selezionato la categoria: ${selectedCategory}\nSeleziona la marca:`,
-            components: [new ActionRowBuilder().addComponents(brandMenu)]
-        });
-        process.messages.push(brandMessage);
-    } else if (state === 'brand' && interaction.customId === 'brandSelect') {
-        const selectedBrand = interaction.values[0];
-        choices.brand = selectedBrand;
-        process.state = 'model';
-
-        const selectedModels = models.find(m => m.brand === selectedBrand)?.models || [];
-
-        const modelMenu = new StringSelectMenuBuilder()
-            .setCustomId('modelSelect')
-            .setPlaceholder('Seleziona il modello')
-            .addOptions(selectedModels.map(model => ({
-                label: model,
-                value: model
-            })));
-
-        const modelMessage = await interaction.update({
-            content: `Hai selezionato la marca: ${selectedBrand}\nSeleziona il modello:`,
-            components: [new ActionRowBuilder().addComponents(modelMenu)]
-        });
-        process.messages.push(modelMessage);
-    } else if (state === 'model' && interaction.customId === 'modelSelect') {
-        const selectedModel = interaction.values[0];
-        choices.model = selectedModel;
-        process.state = 'complete';
-
-        const setupKey = `${choices.circuit}_${choices.category}_${choices.model}`;
-        const setupImagePaths = setupImages[setupKey] || [];
-
-        const files = setupImagePaths.map(filePath => ({
-            attachment: filePath,
-            name: path.basename(filePath)
+        const brandOptions = selectedBrands.map(brand => ({
+            label: brand,
+            value: brand
         }));
 
-        if (files.length > 0) {
-            await interaction.update({
-                content: `Hai selezionato il modello: ${selectedModel}\nEcco i setup disponibili per il circuito ${choices.circuit}, categoria ${choices.category}, marca ${choices.brand}, modello ${selectedModel}:`,
-                files
-            });
-        } else {
-            await interaction.update({
-                content: `Hai selezionato il modello: ${selectedModel}\nNon ci sono setup disponibili per il circuito ${choices.circuit}, categoria ${choices.category}, marca ${choices.brand}, modello ${selectedModel}.`
-            });
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId('brandSelect')
+            .setPlaceholder('Seleziona la marca')
+            .addOptions(brandOptions);
+
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+
+        const brandMessage = await interaction.reply({
+            content: `Circuito selezionato: ${process.choices.circuit}\nCategoria selezionata: ${process.choices.category}\nSeleziona la marca:`,
+            components: [row],
+            fetchReply: true
+        });
+        process.messages.push(brandMessage);
+    } else if (interaction.customId === 'brandSelect' && process.state === 'brand') {
+        // Marca selezionata
+        process.brand = interaction.values[0];
+        process.choices.brand = process.brand;
+        process.state = 'car';
+        clearTimeout(process.timeout);
+        process.timeout = setTimeout(() => {
+            if (setupProcesses[userId]) {
+                cleanupProcess(userId);
+            }
+        }, TIMEOUT);
+
+        const cars = {
+            GT2: {
+                KTM: ['KTM X-Bow GT2'],
+                Maserati: ['Maserati GT2'],
+                Audi: ['Audi R8 LMS GT2'],
+                'Mercedes-AMG': ['Mercedes-AMG GT2'],
+                Porsche: ['Porsche 911 GT2 RS CS Evo', 'Porsche 935']
+            },
+            GT3: {
+                Ferrari: ['Ferrari 296 GT3 (2023)', 'Ferrari 488 Challenge Evo (2020)', 'Ferrari 488 GT3 Evo (2020)', 'Ferrari 488 GT3 (2018)'],
+                Lamborghini: ['Lamborghini Huracan GT3 EVO2 (2023)', 'Lamborghini Huracan ST EVO2 (2021)', 'Lamborghini Huracan GT3 (2015)', 'Lamborghini Huracan GT3 Evo (2019)'],
+                Porsche: ['Porsche 911 (992) GT3 R (2023)', 'Porsche 922 GT3 Cup (2021)', 'Porsche 991 GT3 R (2018)', 'Porsche 991II GT3 R (2019)'],
+                Audi: ['Audi R8 LMS Evo II (2022)', 'Audi R8 LMS (2015)', 'Audi R8 LMS Evo (2019)'],
+                BMW: ['BMW M2 CS Racing (2020)', 'BMW M4 GT3 (2022)', 'BMW M6 GT3 (2017)'],
+                'Mercedes-AMG': ['Mercedes-AMG GT3 (2023)', 'Mercedes-AMG GT3 (2015)'],
+                'Aston Martin': ['Aston Martin V8 Vantage (2019)', 'Aston Martin V12 Vantage (2013)'],
+                Bentley: ['Bentley Continental GT3 (2015)', 'Bentley Continental GT3 (2018)'],
+                Ford: ['Ford Mustang GT3 Race Car (2024)'],
+                Honda: ['Honda NSX GT3 (2017)', 'Honda NSX GT3 Evo (2019)'],
+                Jaguar: ['Jaguar Emil Frey G3 (2012)'],
+                McLaren: ['McLaren 720S GT3 EVO (2023)', 'McLaren 720S GT3 (2019)', 'McLaren 650S GT3 (2015)'],
+                Nissan: ['Nissan GT-R Nismo GT3 (2015)', 'Nissan GT-R Nismo (2018)'],
+                'Reiter Engineering': ['Reiter Engineering R-EX GT3 (2017)']
+            },
+            GT4: {
+                ALpine: ['ALpine A110 GT4 (2018)'],
+                'Aston Martin': ['Aston Martin AMR V8 Vantage GT4 (2018)'],
+                Audi: ['Audi R8 LMS GT4 (2018)'],
+                BMW: ['BMW M4 GT4 (2018)'],
+                Chevrolet: ['Chevrolet Camaro GT4.R (2017)'],
+                Ginetta: ['Ginetta g55 GT4 (2012)'],
+                KTM: ['KTM X-Bow GT4 (2016)'],
+                Maserati: ['Maserati Gran Turismo MC GT4 (2016)'],
+                McLaren: ['McLaren 570S GT4 (2016)'],
+                'Mercedes-AMG': ['Mercedes-AMG GT4 (2016)'],
+                Porsche: ['Porsche718 Cayman GT4 Clubsport (2019)']
+            }
+        };
+
+        const selectedCars = cars[process.category][process.brand];
+
+        const carOptions = selectedCars.map(car => ({
+            label: car,
+            value: car
+        }));
+
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId('carSelect')
+            .setPlaceholder('Seleziona la macchina')
+            .addOptions(carOptions);
+
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+
+        const carMessage = await interaction.reply({
+            content: `Circuito selezionato: ${process.choices.circuit}\nCategoria selezionata: ${process.choices.category}\nMarca selezionata: ${process.choices.brand}\nSeleziona la macchina:`,
+            components: [row],
+            fetchReply: true
+        });
+        process.messages.push(carMessage);
+    } else if (interaction.customId === 'carSelect' && process.state === 'car') {
+        // Macchina selezionata
+        process.car = interaction.values[0];
+        process.choices.car = process.car;
+        clearTimeout(process.timeout);
+
+        // Determina il set di immagini da inviare
+        const key = `${process.choices.circuit}_${process.choices.category}_${process.choices.car}`;
+        const images = setupImages[key] || [];
+
+        const titles = ['Qualifica', 'Gara', 'Pioggia'];
+        let imagesExist = true;
+
+        for (let i = 0; i < images.length; i++) {
+            if (!fs.existsSync(images[i])) {
+                imagesExist = false;
+                break;
+            }
         }
 
-        await cleanupProcess(userId);
+        if (imagesExist) {
+            for (let i = 0; i < images.length; i++) {
+                await interaction.user.send({ content: titles[i], files: [images[i]] });
+            }
+            await interaction.reply({ content: 'Il setup è stato inviato in DM.', ephemeral: true });
+        } else {
+            await interaction.reply({ content: 'Il setup per questa configurazione non è momentaneamente disponibile. Stiamo provvedendo ad elaborare tutti i setup mancanti.', ephemeral: true });
+        }
+
+        // Pulizia dei messaggi e conclusione del processo
+        setTimeout(() => {
+            cleanupProcess(userId);
+        }, 20000);
+    }
+});
+
+// Pianificazione della pulizia del canale ogni lunedì alle 01:00
+cron.schedule('0 1 * * 1', async () => {
+    const channel = await client.channels.fetch(SETUP_CHANNEL_ID);
+    const activeProcesses = Object.keys(setupProcesses).length;
+
+    if (activeProcesses === 0) {
+        try {
+            // Fetch all messages from the channel
+            const fetchedMessages = await channel.messages.fetch({ limit: 100 });
+            await channel.bulkDelete(fetchedMessages);
+            
+            // Send message explaining the commands
+            await channel.send('Il canale è stato ripulito. Ecco i comandi disponibili:\n\n' +
+                '**!setup**: Per avviare il Bot dei Setup.\n' +
+                '**!reset**: Annulla il processo corrente e ripulisce tutto.\n' +
+                '**!annulla**: Annulla la tua ultima scelta.');
+        } catch (error) {
+            console.error('Error cleaning the channel:', error);
+        }
+    } else {
+        console.log('Processi attivi presenti, attendere la fine dei processi per la pulizia.');
     }
 });
 
 client.login(TOKEN);
-
-app.get('/', (req, res) => {
-    res.send('Bot is running!');
-});
-
-app.listen(3000, () => {
-    console.log('Server avviato sulla porta 3000');
-});
-
-async function cleanupProcess(userId) {
-    const process = setupProcesses[userId];
-    if (process) {
-        for (const message of process.messages) {
-            try {
-                await message.delete();
-            } catch (error) {
-                console.error('Error deleting message during cleanup:', error);
-            }
-        }
-        delete setupProcesses[userId];
-    }
-}
