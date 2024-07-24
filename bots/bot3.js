@@ -1,15 +1,27 @@
-require('dotenv').config({ path: '/root/discord-multi-bot/.env' });
 const { Client, GatewayIntentBits, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const cron = require('node-cron');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: '/root/discord-multi-bot/.env' });
     console.log('Current directory:', __dirname);
+
 const app = express();
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.DirectMessages] });
 
-const TOKEN = process.env.BO3_TOKEN;
-    console.log('TOKEN3:', process.env.BO3_TOKEN);
+
+if (!process.env.BOT3_TOKEN) {
+    console.error("ERRORE: File .env non caricato correttamente o BOT3_TOKEN mancante.");
+    process.exit(1);
+}
+
+const token = process.env.BOT3_TOKEN;
+console.log("token:", token); // Log the token to see if it's correctly read
+if (!token || typeof token !== 'string') {
+    throw new Error('Token not found or invalid');
+}
+
+
 const SETUP_CHANNEL_ID = '1262171803858636990';
 const TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
 
@@ -386,4 +398,4 @@ cron.schedule('0 1 * * 1', async () => {
     }
 });
 
-client.login(TOKEN);
+client.login(token);

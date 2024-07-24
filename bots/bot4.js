@@ -2,7 +2,7 @@ const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const express = require('express');
 const app = express();
 const port = 3000;
-require('dotenv').config();
+require('dotenv').config({ path: '/root/discord-multi-bot/.env' });
 
 const client = new Client({
   intents: [
